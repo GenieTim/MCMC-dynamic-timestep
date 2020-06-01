@@ -13,15 +13,15 @@ Project by Tim Bernhard, Yi Su, Moritz Wettstein
 
 ## About
 
-This is the final project for the course _Molecular and Materials Modelling_ ([227-0161-00L](227-0161-00L  Molecular and Materials Modelling)) at ETH Zürich.
+This is the final project for the course _Molecular and Materials Modelling_ ([227-0161-00L]([227-0161-00L  Molecular and Materials Modelling](http://www.vvz.ethz.ch/Vorlesungsverzeichnis/lerneinheitPre.do?lerneinheitId=136471&semkez=2020S&lang=de))) at ETH Zürich.
 
 ## Installation
 
 This project is managed using `git`.
-You can download it using `git clone git@github.com:GenieTim/MCMC-dynamic-timestep.git`.
+You can download the project using `git clone git@github.com:GenieTim/MCMC-dynamic-timestep.git` if you have git installed.
 Afterwards, run `cd MCMC-dynamic-timestep` to switch into the new, cloned repository's directory.
 
-There are two ways of setting up the environment: Conda or Docker.
+There are two ways of setting up the environment: [Conda](#conda) (recommended) or [Docker](#docker).
 
 ### Conda
 
