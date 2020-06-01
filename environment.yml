@@ -1,4 +1,7 @@
 name: mmm2020p7
+channels:
+  - conda-forge
+  - omnia
 dependencies:
   - numpy
   - pandas

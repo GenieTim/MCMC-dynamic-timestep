@@ -2,6 +2,19 @@
 
 Project by Tim Bernhard, Yi Su, Moritz Wettstein
 
+## Table of Contents
+- [Project 7: Implementing and testing a multiple time step Monte Carlo algorithm](#project-7-implementing-and-testing-a-multiple-time-step-monte-carlo-algorithm)
+  - [Table of Contents](#table-of-contents)
+  - [About](#about)
+  - [Installation](#installation)
+    - [Conda](#conda)
+    - [Docker](#docker)
+  - [Running](#running)
+
+## About
+
+This is the final project for the course _Molecular and Materials Modelling_ ([227-0161-00L](227-0161-00L  Molecular and Materials Modelling)) at ETH Zürich.
+
 ## Installation
 
 This project is managed using `git`.
@@ -34,4 +47,8 @@ docker container run -p 8888:8888 -e JUPYTER_ENABLE_LAB=yes -v $(pwd):/home/jovy
 
 ## Running
 
-The source code can be found in the `src` directory.
+The source code can be found in the [`src`](./src) directory.
+
+To run the tests, execute `python src/tests.py` in your terminal.
+
+To run the simulation, execute `python src/main.py` in your terminal.
