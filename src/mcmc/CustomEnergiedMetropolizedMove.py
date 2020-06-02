@@ -105,7 +105,6 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
             thermodynamic_state)
 
         # Compute initial energy. We don't need to set velocities to compute the potential.
-        # TODO assume sampler_state.potential_energy is the correct potential if not None?
         sampler_state.apply_to_context(context, ignore_velocities=True)
         initial_energy = self._calculate_potential_energy(
             thermodynamic_state, context)
@@ -151,6 +150,7 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         # Print timing information.
         timer.stop(benchmark_id)
         # timer.report_timing()
+        # TODO: write state to file in order to create trajectory
 
     def __getstate__(self):
         if self.context_cache is None:
