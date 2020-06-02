@@ -30,7 +30,7 @@ Conda is used to install the required dependencies.
 The steps are the following:
 
 1. Install conda as described in the [docs](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
-2. Create an environment for this repo: `conda env create -f environment.yml`
+2. Create an environment for this repo by running the following command in this repository's directory: `conda env create -f environment.yml` 
 3. Activate the enviroment: `conda activate mmm2020p7`
 
 ### Docker
