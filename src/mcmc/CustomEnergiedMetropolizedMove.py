@@ -4,6 +4,8 @@
 # As copied from https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L770
 import abc
 import copy
+import json
+import os
 
 import numpy as np
 
@@ -39,7 +41,7 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
     --------
     >>> from simtk import unit
     >>> from openmmtools import testsystems, states
-    >>> class AddOneVector(MetropolizedMove):
+    >>> class AddOneVector(CustomEnergiedMetropolizedMove):
     ...     def __init__(self, **kwargs):
     ...         super(AddOneVector, self).__init__(**kwargs)
     ...     def _propose_positions(self, initial_positions):
@@ -64,6 +66,7 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         self.n_proposed = 0
         self.atom_subset = atom_subset
         self.context_cache = context_cache
+        self.state_history = []
 
     @property
     def statistics(self):
@@ -150,7 +153,37 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         # Print timing information.
         timer.stop(benchmark_id)
         # timer.report_timing()
-        # TODO: write state to file in order to create trajectory
+        # remember state so we can write to file later in order to create trajectory
+        # note that this uses very much memory – ok for our small molecule,
+        # but definintely not price worthy
+        self.state_history.append({
+            'accepted': self.n_accepted,
+            'proposed': self.n_proposed,
+            'positions': {
+                'value': sampler_state.positions.__getstate__()['_value'].tolist(),
+                'unit': str(sampler_state.positions.__getstate__()['unit'].get_name())
+            },
+            # 'velocities': { # in this MC, velocities by sampler state will always be 0. they are not relevant for the angles anyway
+            #     'value': sampler_state.velocities.__getstate__()['_value'].tolist(),
+            #     'unit': str(sampler_state.velocities.__getstate__()['unit'].get_name())
+            # },
+            'initial_energy': initial_energy,
+            'proposed_energy': proposed_energy,
+            'unmodified_energy': thermodynamic_state.reduced_potential(context),
+            'current_energy': {
+                'unit': str(sampler_state.kinetic_energy.__getstate__()['unit'].get_name()) + ']',
+                'value': sampler_state.kinetic_energy.__getstate__()['_value']
+            },
+            'timing': timer.report_timing()
+        })
+
+    def write_to_file(self, out_filename=None):
+        if (out_filename is None):
+            out_filename = os.path.dirname(os.path.realpath(
+                __file__)) + "/../../out/results_" + str(self.__class__.__name__) + ".json"
+        output_file = open(out_filename, "w+")
+        json.dump(self.state_history, fp=output_file)
+        output_file.close()
 
     def __getstate__(self):
         if self.context_cache is None:

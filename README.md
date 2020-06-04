@@ -52,3 +52,6 @@ The source code can be found in the [`src`](./src) directory.
 To run the tests, execute `python src/tests.py` in your terminal.
 
 To run the simulation, execute `python src/main.py` in your terminal.
+
+Finally, to plot the results, execute `python src/plot.py` in your terminal.
+

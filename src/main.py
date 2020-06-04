@@ -23,6 +23,9 @@ sampler = MCMCSampler(thermodynamic_state, sampler_state, move=move)
 sampler.minimize()
 sampler.run(n_iterations=2)  # TODO: increase iterations for final run
 
+# write the results
+move.write_to_file()
+
 # get the results of the last/final iterations
 # this is an example on how to do it in the actual, needed logger
 results = sampler.sampler_state
