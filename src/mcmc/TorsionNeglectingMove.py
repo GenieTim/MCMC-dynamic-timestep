@@ -48,6 +48,7 @@ class TorsionNeglectingMove(RotateDisplaceMove):
         super(TorsionNeglectingMove, self).__init__(**kwargs)
         self.timestep = 0
         self.timesteps = timesteps
+        self.cached_torsional_term = 0
 
     def __getstate__(self):
         serialization = super(TorsionNeglectingMove, self).__getstate__()
@@ -62,6 +63,10 @@ class TorsionNeglectingMove(RotateDisplaceMove):
 
     def _calculate_potential_energy(self, thermodynamic_state, context):
         self.timestep += 1
-        # TODO: calculate thermodynamic energy 
-        # if timestep % timesteps including new torsional term
+        # TODO: calculate potential energy / replace following line
         return thermodynamic_state.reduced_potential(context)
+        # if (timestep % timesteps == 0): calculate new torsional term
+        #   self.cached_torsional_term = 
+        # 
+        # anyway calculate all other terms
+        # sum them up (+ self.cached_torsional_term) and return
