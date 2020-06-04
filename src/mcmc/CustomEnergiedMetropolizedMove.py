@@ -172,9 +172,9 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
             'unmodified_energy': thermodynamic_state.reduced_potential(context),
             'current_energy': {
                 'unit': str(sampler_state.kinetic_energy.__getstate__()['unit'].get_name()) + ']',
-                'value': sampler_state.kinetic_energy.__getstate__()['_value']
+                'value': copy.deepcopy(sampler_state.kinetic_energy.__getstate__()['_value'])
             },
-            'timing': timer.report_timing()
+            'timing': copy.deepcopy(timer.report_timing())
         })
 
     def write_to_file(self, out_filename=None):

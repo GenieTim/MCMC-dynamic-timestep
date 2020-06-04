@@ -69,7 +69,7 @@ def torsional_angle(name, positions):
 # read data
 os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/../")
 # TODO: replace with your experiment
-data = json.load(open("./out/results_move.json"))
+data = json.load(open("./out/results_TorsionNeglectingMove.json"))
 
 # check whether we know which positions correspond to which atom
 # test_pos = np.array(data[0]['positions']['value'])
@@ -91,19 +91,35 @@ psi = []
 
 for i in range(len(data)):
     state = data[i]
-    energies.append(state['current_energy']['value'])
+    energies.append(state['unmodified_energy'])
     positions = np.array(state['positions']['value'])
-    phi.append(torsional_angle('phi', positions))
-    psi.append(torsional_angle('psi', positions))
+    phi.append(torsional_angle('phi', positions) / 1e-1)
+    psi.append(torsional_angle('psi', positions) / 1e-1)
 
-print(energies, phi, psi)
+print("Energy range: between {} and {}".format(max(energies), min(energies)))
 norm = mpl.colors.Normalize(vmin=min(energies), vmax=max(energies))
 color_map = mpl.cm.ScalarMappable(norm=norm, cmap=mpl.cm.hot)
 colors = []
 for i in range(len(energies)):
     colors.append(color_map.to_rgba(energies[i]))
 
-plt.scatter(phi, psi, c=colors)
+fig, ax = plt.subplots()
+ax.scatter(phi, psi, c=colors, marker="+")
+# emulate fix for https://github.com/matplotlib/matplotlib/issues/6015
+# see also https://stackoverflow.com/questions/45757260/matplotlibs-autoscale-doesnt-seem-to-work-on-y-axis-for-small-values
+ax.set_ylabel("Psi $\Psi$")
+ax.set_xlabel("Phi $\Phi$")
+
+dx = (max(phi) - min(phi))*0.1
+dy = (max(psi) - min(psi))*0.1
+
+ax.set_xlim(min(phi)-dx, max(phi)+dx)
+ax.set_ylim(min(psi)-dy, max(psi)+dy)
+
+ax.yaxis.set_ticks(np.linspace(min(psi), max(psi), num=5))
+ax.xaxis.set_ticks(np.linspace(min(phi), max(phi), num=5))
+
+fig.savefig("./img/psi_vs_phi.png", bbox_inches='tight')
 plt.show()
 
 # TODO: also plot deviations between current energy

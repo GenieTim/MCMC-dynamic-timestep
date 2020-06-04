@@ -7,7 +7,7 @@ from mcmc.TorsionNeglectingMove import TorsionNeglectingMove
 from openmmtools import cache, testsystems
 from openmmtools.mcmc import GHMCMove, MCMCSampler
 from openmmtools.states import SamplerState, ThermodynamicState
-from simtk import unit
+from simtk import openmm, unit
 
 # setup our system
 alanine = testsystems.AlanineDipeptideVacuum()
@@ -16,12 +16,13 @@ thermodynamic_state = ThermodynamicState(
 sampler_state = SamplerState(positions=alanine.positions)
 
 # TODO: decide on nr. of timesteps to go before recalculation
-move = TorsionNeglectingMove(timesteps=5)
+move = TorsionNeglectingMove(
+    timesteps=5, displacement_sigma=5.0*unit.nanometer)
 sampler = MCMCSampler(thermodynamic_state, sampler_state, move=move)
 
 # run the sampler
 sampler.minimize()
-sampler.run(n_iterations=2)  # TODO: increase iterations for final run
+sampler.run(n_iterations=400)  # TODO: increase iterations for final run
 
 # write the results
 move.write_to_file()

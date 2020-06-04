@@ -31,7 +31,7 @@ The steps are the following:
 
 1. Install conda as described in the [docs](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html)
 2. Create an environment for this repo by running the following command in this repository's directory: `conda env create -f environment.yml` 
-3. Activate the enviroment: `conda activate mmm2020p7`
+3. Activate the enviroment: `conda activate mmm2020p7`. Note that you may have to run this command every time you want to work on the project in a new command line window.
 
 ### Docker
 

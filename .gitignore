@@ -129,4 +129,6 @@ dmypy.json
 .pyre/
 
 out/results.csv
-out/results_move.json
+out/results*
+img/*.png
+img/*.eps
