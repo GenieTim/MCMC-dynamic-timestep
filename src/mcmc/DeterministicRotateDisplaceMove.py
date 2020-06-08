@@ -1,13 +1,13 @@
 import numpy as np
-import abc
 from simtk import openmm, unit
+from numpy.random import default_rng
 
-from .CustomEnergiedMetropolizedMove import CustomEnergiedMetropolizedMove
+from .DeterministicMetropolizedMove import DeterministicMetropolizedMove
 
 # inspired by https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L1757
 # and https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L1680
-class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
-    """A metropolized move that randomly displaces & rotates a subset of atoms.
+class DeterministicRotateDisplaceMove(DeterministicMetropolizedMove):
+    """A metropolized move that deterministic-randomly displaces & rotates a subset of atoms.
     Parameters
     ----------
     displacement_sigma : simtk.unit.Quantity
@@ -35,11 +35,11 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
 
     # still to be overriden, since super().__init__ expects class name too
     def __init__(self, displacement_sigma=1.0*unit.nanometer, **kwargs):
-        super(RotateDisplaceMove, self).__init__(**kwargs)
+        super(DeterministicRotateDisplaceMove, self).__init__(**kwargs)
         self.displacement_sigma = displacement_sigma
+        self.rotate_rng = default_rng(5)
 
-    @staticmethod
-    def displace_positions(positions, displacement_sigma=1.0*unit.nanometer):
+    def displace_positions(self, positions, displacement_sigma=1.0*unit.nanometer):
         """Return the positions after applying a random displacement to them.
         Parameters
         ----------
@@ -55,12 +55,11 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
         """
         positions_unit = positions.unit
         unitless_displacement_sigma = displacement_sigma / positions_unit
-        displacement_vector = unit.Quantity(np.random.randn(3) * unitless_displacement_sigma,
+        displacement_vector = unit.Quantity(self.rotate_rng.standard_normal(3) * unitless_displacement_sigma,
                                             positions_unit)
         return positions + displacement_vector
 
-    @classmethod
-    def rotate_positions(cls, positions):
+    def rotate_positions(self, positions):
         """Return the positions after applying a random rotation to them.
         Parameters
         ----------
@@ -78,26 +77,24 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
         x_initial_mean = x_initial.mean(0)
 
         # Generate a random rotation matrix.
-        rotation_matrix = cls.generate_random_rotation_matrix()
+        rotation_matrix = self.generate_random_rotation_matrix()
 
         # Apply rotation.
         x_proposed = (rotation_matrix * np.matrix(x_initial -
                                                   x_initial_mean).T).T + x_initial_mean
         return unit.Quantity(x_proposed, positions_unit)
 
-    @classmethod
-    def generate_random_rotation_matrix(cls):
+    def generate_random_rotation_matrix(self):
         """Return a random 3x3 rotation matrix.
         Returns
         -------
         Rq : 3x3 numpy.ndarray
             The random rotation matrix.
         """
-        q = cls._generate_uniform_quaternion()
-        return cls._rotation_matrix_from_quaternion(q)
+        q = self._generate_uniform_quaternion()
+        return self._rotation_matrix_from_quaternion(q)
 
-    @staticmethod
-    def _rotation_matrix_from_quaternion(q):
+    def _rotation_matrix_from_quaternion(self, q):
         """Compute a 3x3 rotation matrix from a given quaternion (4-vector).
         Parameters
         ----------
@@ -142,8 +139,7 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
 
         return Rq
 
-    @staticmethod
-    def _generate_uniform_quaternion():
+    def _generate_uniform_quaternion(self):
         """Generate a uniform normalized quaternion 4-vector.
         References
         ----------
@@ -154,7 +150,7 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
         --------
         >>> q = MCRotationMove._generate_uniform_quaternion()
         """
-        u = np.random.rand(3)
+        u = self.rotate_rng.random(3)
         q = np.array([np.sqrt(1-u[0])*np.sin(2*np.pi*u[1]),
                       np.sqrt(1-u[0])*np.cos(2*np.pi*u[1]),
                       np.sqrt(u[0])*np.sin(2*np.pi*u[2]),
@@ -162,12 +158,12 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
         return q
 
     def __getstate__(self):
-        serialization = super(RotateDisplaceMove, self).__getstate__()
+        serialization = super(DeterministicRotateDisplaceMove, self).__getstate__()
         serialization['displacement_sigma'] = self.displacement_sigma
         return serialization
 
     def __setstate__(self, serialization):
-        super(RotateDisplaceMove, self).__setstate__(serialization)
+        super(DeterministicRotateDisplaceMove, self).__setstate__(serialization)
         self.displacement_sigma = serialization['displacement_sigma']
 
     def _propose_positions(self, initial_positions):
@@ -175,7 +171,3 @@ class RotateDisplaceMove(CustomEnergiedMetropolizedMove):
         displaced_positions = self.displace_positions(initial_positions, self.displacement_sigma)
         rotated_positions = self.rotate_positions(initial_positions)
         return rotated_positions
-
-    @abc.abstractmethod
-    def _calculate_potential_energy(self, thermodynamic_state, context):
-        return thermodynamic_state.reduced_potential(context)

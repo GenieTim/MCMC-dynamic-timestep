@@ -3,10 +3,14 @@ import os
 
 import pandas as pd
 
-from mcmc.TorsionNeglectingMove import TorsionNeglectingMove
+from mcmc.DeterministicRotateDisplaceMove import DeterministicRotateDisplaceMove
 from openmmtools import cache, testsystems
 from openmmtools.mcmc import GHMCMove, MCMCSampler
 from openmmtools.states import SamplerState, ThermodynamicState
+from potentialEnergyCalculator.InitialPotentialEnergyCalculator import \
+    InitialPotentialEnergyCalculator
+from potentialEnergyCalculator.TorsionNeglectingPotentialEnergyCalculator import \
+    TorsionNeglectingPotentialEnergyCalculator
 from simtk import openmm, unit
 
 # setup our system
@@ -16,8 +20,9 @@ thermodynamic_state = ThermodynamicState(
 sampler_state = SamplerState(positions=alanine.positions)
 
 # TODO: decide on nr. of timesteps to go before recalculation
-move = TorsionNeglectingMove(
-    timesteps=5, displacement_sigma=5.0*unit.nanometer)
+V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=5)
+move = DeterministicRotateDisplaceMove(
+    displacement_sigma=5.0*unit.nanometer, potential_energy_calculator=V_calculator)
 sampler = MCMCSampler(thermodynamic_state, sampler_state, move=move)
 
 # run the sampler

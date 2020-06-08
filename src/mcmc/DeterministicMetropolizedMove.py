@@ -1,21 +1,23 @@
 # =============================================================================
 # METROPOLIZED MOVE BASE CLASS
 # =============================================================================
-# As copied from https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L770
+# As adapted from https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L770
 import abc
 import copy
 import json
 import os
 
 import numpy as np
+from numpy.random import default_rng
 
 from openmmtools import cache, integrators, utils
 from openmmtools.mcmc import MCMCMove
 from openmmtools.utils import SubhookedABCMeta, Timer
 
 
-class CustomEnergiedMetropolizedMove(MCMCMove):
-    """A base class for metropolized moves with a .
+class DeterministicMetropolizedMove(MCMCMove):
+    """A base class for metropolized moves with a custom pot energy calculator
+    and .
     This class is intended to be inherited by MCMCMoves that needs to
     accept or reject a proposed move with a Metropolis criterion. Only
     the proposal needs to be specified by subclasses through the method
@@ -29,6 +31,8 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
     context_cache : openmmtools.cache.ContextCache, optional
         The ContextCache to use for Context creation. If None, the global cache
         openmmtools.cache.global_context_cache is used (default is None).
+    potential_energy_calculator : an object with a function 
+        _calculate_potential_energy(self, thermodynamic_state, context)
     Attributes
     ----------
     n_accepted : int
@@ -37,6 +41,7 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         The total number of attempted moves.
     atom_subset
     context_cache
+    potential_energy_calculator
     Examples
     --------
     >>> from simtk import unit
@@ -61,12 +66,15 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
     1
     """
 
-    def __init__(self, atom_subset=None, context_cache=None):
+    def __init__(self, potential_energy_calculator=None, atom_subset=None, context_cache=None):
         self.n_accepted = 0
         self.n_proposed = 0
+        self.potential_energy_calculator = potential_energy_calculator
         self.atom_subset = atom_subset
         self.context_cache = context_cache
         self.state_history = []
+        # use "deterministic" random generator
+        self.rng = default_rng(42)
 
     @property
     def statistics(self):
@@ -79,9 +87,8 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         self.n_proposed = value['n_proposed']
 
     # MARK: this is the function to adapt to our ideas
-    @abc.abstractmethod
     def _calculate_potential_energy(self, thermodynamic_state, context):
-        return thermodynamic_state.reduced_potential(context)
+        return self.potential_energy_calculator._calculate_potential_energy(thermodynamic_state, context)
 
     def apply(self, thermodynamic_state, sampler_state):
         """Apply a metropolized move to the sampler state.
@@ -143,7 +150,7 @@ class CustomEnergiedMetropolizedMove(MCMCMove):
         # Accept or reject with Metropolis criteria.
         delta_energy = proposed_energy - initial_energy
         if (not np.isnan(proposed_energy) and
-                (delta_energy <= 0.0 or np.random.rand() < np.exp(-delta_energy))):
+                (delta_energy <= 0.0 or self.rng.random() < np.exp(-delta_energy))):
             self.n_accepted += 1
         else:
             # Restore original positions.
