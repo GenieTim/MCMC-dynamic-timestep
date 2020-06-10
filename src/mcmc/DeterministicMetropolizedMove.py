@@ -23,8 +23,13 @@ class DeterministicMetropolizedMove(MCMCMove):
     the proposal needs to be specified by subclasses through the method
     _propose_positions(), the way to calculate potential energy through 
     _calculate_potential_energy.
+
     Parameters
     ----------
+    accept_anyway : bool
+        Indicate that you don't care about the result of the potential energy calculation, 
+        you want to accept all moves. This is useful in case you want to compare two methods,
+        to get an overall sum of how many moves are accepted.
     atom_subset : slice or list of int, optional
         If specified, the move is applied only to those atoms specified by these
         indices. If None, the move is applied to all atoms (default is None).
@@ -33,15 +38,18 @@ class DeterministicMetropolizedMove(MCMCMove):
         openmmtools.cache.global_context_cache is used (default is None).
     potential_energy_calculator : an object with a function 
         _calculate_potential_energy(self, thermodynamic_state, context)
+
     Attributes
     ----------
     n_accepted : int
         The number of proposals accepted.
     n_proposed : int
         The total number of attempted moves.
+    accept_anyway
     atom_subset
     context_cache
     potential_energy_calculator
+
     Examples
     --------
     >>> from simtk import unit
@@ -66,9 +74,10 @@ class DeterministicMetropolizedMove(MCMCMove):
     1
     """
 
-    def __init__(self, potential_energy_calculator=None, atom_subset=None, context_cache=None):
+    def __init__(self, potential_energy_calculator=None, atom_subset=None, context_cache=None, accept_anyway=False):
         self.n_accepted = 0
         self.n_proposed = 0
+        self.accept_anyway = accept_anyway
         self.potential_energy_calculator = potential_energy_calculator
         self.atom_subset = atom_subset
         self.context_cache = context_cache
@@ -152,7 +161,7 @@ class DeterministicMetropolizedMove(MCMCMove):
         if (not np.isnan(proposed_energy) and
                 (delta_energy <= 0.0 or self.rng.random() < np.exp(-delta_energy))):
             self.n_accepted += 1
-        else:
+        elif (not self.accept_anyway):
             # Restore original positions.
             sampler_state.positions[atom_subset] = initial_positions
         self.n_proposed += 1

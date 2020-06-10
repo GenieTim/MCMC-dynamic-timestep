@@ -1,5 +1,54 @@
+import copy
+import os
+import time
+
 import simtk.testInstallation
+from mcmc.DeterministicRotateDisplaceMove import \
+    DeterministicRotateDisplaceMove
+from openmmtools import cache, testsystems
+from openmmtools.mcmc import GHMCMove, MCMCSampler
+from openmmtools.states import SamplerState, ThermodynamicState
+from potentialEnergyCalculator.InitialPotentialEnergyCalculator import \
+    InitialPotentialEnergyCalculator
+from potentialEnergyCalculator.TorsionNeglectingPotentialEnergyCalculator import \
+    TorsionNeglectingPotentialEnergyCalculator
+from simtk import openmm, unit
 
 simtk.testInstallation.main()
 
-# TODO: run sampler twice with different parameters in order to check for differences due to different timesteps
+# setup our system
+alanine = testsystems.AlanineDipeptideVacuum()
+thermodynamic_state = ThermodynamicState(
+    system=alanine.system, temperature=298.15*unit.kelvin)
+sampler_state = SamplerState(positions=alanine.positions)
+
+# run sampler multiple times with different parameters
+# in order to check for differences due to different timesteps
+accept_state = [True, False]
+for accept in accept_state:
+    print("Accepting anyway: {}".format(accept))
+    print("Timestepsize\tAccepted\tProposed\tTime")
+    # run different nr. of timesteps to go before recalculation
+    for n_steps in range(0, 10):
+        V_calculator = TorsionNeglectingPotentialEnergyCalculator(
+            timesteps=n_steps)
+        move = DeterministicRotateDisplaceMove(
+            displacement_sigma=5.0*unit.nanometer, potential_energy_calculator=V_calculator, accept_anyway=accept)
+        sampler = MCMCSampler(copy.deepcopy(thermodynamic_state),
+                              copy.deepcopy(sampler_state), move=move)
+        sampler.minimize()
+        # take time
+        start = time.time()
+        # TODO: increase iterations for final run?
+        sampler.run(n_iterations=400)
+        end = time.time()
+
+        print("{}\t{}\t{}\t{}".format(n_steps, move.n_accepted,
+                                      move.n_proposed, end - start))
+
+        # write the results
+        # only interesting if they are not all the same
+        if (not accept):
+            out_filename = os.path.dirname(os.path.realpath(
+                __file__)) + "/../out/test_results_" + n_steps + ".json"
+            move.write_to_file(out_filename=out_filename)
