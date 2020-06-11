@@ -42,7 +42,7 @@ class TorsionNeglectingPotentialEnergyCalculator(object):
         self.timestep = serialization['timestep']
 
     def _calculate_potential_energy(self, thermodynamic_state, context):
-        sys = thermodynamic_state.get_system()
+        sys = context.getSystem()
 
         # this might should be done in the init
         # if we were still inheriting from metropolizedMove
@@ -54,10 +54,11 @@ class TorsionNeglectingPotentialEnergyCalculator(object):
             # print("Got force: {} with group: {}".format(
             #     className, force.getForceGroup()))
 
-            if (className == "PeriodicTorsionForce" or className == "CustomTorsionForce"):
+            if ("TorsionForce" in className):
                 force.setForceGroup(2)
             else:
                 force.setForceGroup(1)
+        
         # see also: https://openmmtools.readthedocs.io/en/latest/_modules/openmmtools/states.html#ThermodynamicState.reduced_potential
         # calculate all forces but torsional
         n_particles = context.getSystem().getNumParticles()
@@ -72,7 +73,7 @@ class TorsionNeglectingPotentialEnergyCalculator(object):
                 getEnergy=True, groups=2)
             self.cached_torsional_term = openmm_state.getPotentialEnergy()
 
-        print("V: {}, T: {}".format(potential_energy, self.cached_torsional_term))
+        # print("V: {}, T: {}".format(potential_energy, self.cached_torsional_term))
         potential_energy += self.cached_torsional_term
         self.timestep += 1
 
