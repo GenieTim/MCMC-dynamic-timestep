@@ -74,7 +74,7 @@ class TorsionNeglectingPotentialEnergyCalculator(object):
             self.cached_torsional_term = openmm_state.getPotentialEnergy()
 
         potential_energy += self.cached_torsional_term
-        print("V: {}, T: {}".format(potential_energy, self.cached_torsional_term))
+        # print("V: {}, T: {}".format(potential_energy, self.cached_torsional_term))
         self.timestep += 1
 
         # Convert potential energy into reduced potential.

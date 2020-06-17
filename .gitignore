@@ -128,7 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Generated files
 out/results.csv
 out/results*
+out/test_results*
 img/*.png
 img/*.eps

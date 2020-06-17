@@ -29,7 +29,7 @@ for accept in accept_state:
     print("Accepting anyway: {}".format(accept))
     print("Timestepsize\tAccepted\tProposed\tTime")
     # run different nr. of timesteps to go before recalculation
-    for n_steps in range(0, 10):
+    for n_steps in range(1, 10):
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(
             timesteps=n_steps)
         move = DeterministicRotateDisplaceMove(
@@ -50,5 +50,5 @@ for accept in accept_state:
         # only interesting if they are not all the same
         if (not accept):
             out_filename = os.path.dirname(os.path.realpath(
-                __file__)) + "/../out/test_results_" + n_steps + ".json"
+                __file__)) + "/../out/test_results_" + str(n_steps) + ".json"
             move.write_to_file(out_filename=out_filename)
