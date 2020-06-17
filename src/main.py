@@ -3,7 +3,8 @@ import os
 
 import pandas as pd
 
-from mcmc.DeterministicRotateDisplaceMove import DeterministicRotateDisplaceMove
+from mcmc.DeterministicRotateDisplaceMove import \
+    DeterministicRotateDisplaceMove
 from openmmtools import cache, testsystems
 from openmmtools.mcmc import GHMCMove, MCMCSampler
 from openmmtools.states import SamplerState, ThermodynamicState
@@ -12,12 +13,28 @@ from potentialEnergyCalculator.InitialPotentialEnergyCalculator import \
 from potentialEnergyCalculator.TorsionNeglectingPotentialEnergyCalculator import \
     TorsionNeglectingPotentialEnergyCalculator
 from simtk import openmm, unit
+from simtk.openmm import *
+from simtk.openmm.app import *
 
 # setup our system
-alanine = testsystems.AlanineDipeptideVacuum()
+# Two possible ways:
+# a) use predifined system
+# alanine = testsystems.AlanineDipeptideVacuum()
+# system = alanine.system
+# positions = alanine.positions
+
+# b) create & load our own
+pdb = PDBFile(os.path.dirname(os.path.realpath(__file__)) +
+              '/input/alanine-dipeptide-nowater.pdb')
+forcefield = ForceField('amber10.xml')
+system = forcefield.createSystem(pdb.topology, nonbondedMethod=PME,
+                                 nonbondedCutoff=1*unit.nanometer, constraints=HBonds)
 thermodynamic_state = ThermodynamicState(
-    system=alanine.system, temperature=298.15*unit.kelvin)
-sampler_state = SamplerState(positions=alanine.positions)
+    system=system, temperature=298.15*unit.kelvin)
+positions = pdb.getPositions()
+
+# finally, start with sampling
+sampler_state = SamplerState(positions=positions)
 
 # TODO: decide on nr. of timesteps to go before recalculation
 V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=5)
