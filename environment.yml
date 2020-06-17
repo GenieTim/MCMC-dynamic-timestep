@@ -6,6 +6,6 @@ dependencies:
   - numpy
   - pandas
   - openmmtools
-  - openforcefield
+  - openforcefields
   - openmm
   - python=3.7
