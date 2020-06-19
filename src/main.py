@@ -39,7 +39,10 @@ sampler_state = SamplerState(positions=positions)
 # TODO: decide on nr. of timesteps to go before recalculation
 V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=5)
 move = DeterministicRotateDisplaceMove(
-    displacement_sigma=5.0*unit.nanometer, potential_energy_calculator=V_calculator)
+    displacement_sigma=5.0*unit.nanometer,
+    potential_energy_calculator=V_calculator,
+    atom_subset=list(range(sampler_state.n_particles)) # TODO: currently, all atoms get moved the same distance I guess. That may not make much sense
+)
 sampler = MCMCSampler(thermodynamic_state, sampler_state, move=move)
 
 # run the sampler

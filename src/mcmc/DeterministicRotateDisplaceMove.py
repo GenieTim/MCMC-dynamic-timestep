@@ -1,8 +1,10 @@
 import numpy as np
-from simtk import openmm, unit
 from numpy.random import default_rng
 
+from simtk import openmm, unit
+
 from .DeterministicMetropolizedMove import DeterministicMetropolizedMove
+
 
 # inspired by https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L1757
 # and https://github.com/choderalab/openmmtools/blob/d4097719d49437c87ad8ca7136d74791fe762dcf/openmmtools/mcmc.py#L1680
@@ -57,6 +59,7 @@ class DeterministicRotateDisplaceMove(DeterministicMetropolizedMove):
         unitless_displacement_sigma = displacement_sigma / positions_unit
         displacement_vector = unit.Quantity(self.rotate_rng.standard_normal(3) * unitless_displacement_sigma,
                                             positions_unit)
+        # print("Displacement vector: {}".format(displacement_vector))
         return positions + displacement_vector
 
     def rotate_positions(self, positions):
@@ -158,16 +161,20 @@ class DeterministicRotateDisplaceMove(DeterministicMetropolizedMove):
         return q
 
     def __getstate__(self):
-        serialization = super(DeterministicRotateDisplaceMove, self).__getstate__()
+        serialization = super(
+            DeterministicRotateDisplaceMove, self).__getstate__()
         serialization['displacement_sigma'] = self.displacement_sigma
         return serialization
 
     def __setstate__(self, serialization):
-        super(DeterministicRotateDisplaceMove, self).__setstate__(serialization)
+        super(DeterministicRotateDisplaceMove,
+              self).__setstate__(serialization)
         self.displacement_sigma = serialization['displacement_sigma']
 
     def _propose_positions(self, initial_positions):
         """Implement MetropolizedMove._propose_positions for apply()."""
-        displaced_positions = self.displace_positions(initial_positions, self.displacement_sigma)
+        # print("Proposing for {} positions".format(len(initial_positions)))
+        displaced_positions = self.displace_positions(
+            initial_positions, self.displacement_sigma)
         rotated_positions = self.rotate_positions(initial_positions)
         return rotated_positions
