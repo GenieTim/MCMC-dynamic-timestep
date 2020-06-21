@@ -27,7 +27,7 @@ sampler_state = SamplerState(positions=alanine.positions)
 accept_state = [True, False]
 for accept in accept_state:
     print("Accepting anyway: {}".format(accept))
-    print("Timestepsize\tAccepted\tProposed\tTime")
+    print("Timestepsize\tAccepted\tProposed\tTime [s]")
     # run different nr. of timesteps to go before recalculation
     for n_steps in range(1, 10):
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(
