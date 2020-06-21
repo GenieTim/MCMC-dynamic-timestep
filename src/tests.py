@@ -24,6 +24,7 @@ sampler_state = SamplerState(positions=alanine.positions)
 
 # run sampler multiple times with different parameters
 # in order to check for differences due to different timesteps
+# (runtime can only be compared for same acceptance rate)
 accept_state = [True, False]
 for accept in accept_state:
     print("Accepting anyway: {}".format(accept))
@@ -39,7 +40,7 @@ for accept in accept_state:
         sampler.minimize()
         # take time
         start = time.time()
-        # TODO: increase iterations for final run?
+        # TODO: increase iterations for final run
         sampler.run(n_iterations=400)
         end = time.time()
 
