@@ -34,7 +34,7 @@ for accept in accept_state:
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(
             timesteps=n_steps)
         move = DeterministicRotateDisplaceMove(
-            displacement_sigma=5.0*unit.nanometer, potential_energy_calculator=V_calculator, accept_anyway=accept)
+            displacement_sigma=5.0*unit.nanometer, atom_subset = 3, potential_energy_calculator=V_calculator, accept_anyway=accept, rng_seed = n_steps)
         sampler = MCMCSampler(copy.deepcopy(thermodynamic_state),
                               copy.deepcopy(sampler_state), move=move)
         sampler.minimize()

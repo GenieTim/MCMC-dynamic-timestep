@@ -8,7 +8,7 @@ import json
 import os
 
 import numpy as np
-from numpy.random import default_rng
+from numpy.random import default_rng, choice
 
 from openmmtools import cache, integrators, utils
 from openmmtools.mcmc import MCMCMove
@@ -30,9 +30,10 @@ class DeterministicMetropolizedMove(MCMCMove):
         Indicate that you don't care about the result of the potential energy calculation, 
         you want to accept all moves. This is useful in case you want to compare two methods,
         to get an overall sum of how many moves are accepted.
-    atom_subset : slice or list of int, optional
+    atom_subset : slice or list of int or int, optional
         If specified, the move is applied only to those atoms specified by these
-        indices. If None, the move is applied to all atoms (default is None).
+        indices. If int, move is applied to this many random atoms.
+        If None, the move is applied to all atoms (default is None).
     context_cache : openmmtools.cache.ContextCache, optional
         The ContextCache to use for Context creation. If None, the global cache
         openmmtools.cache.global_context_cache is used (default is None).
@@ -74,7 +75,7 @@ class DeterministicMetropolizedMove(MCMCMove):
     1
     """
 
-    def __init__(self, potential_energy_calculator=None, atom_subset=None, context_cache=None, accept_anyway=False):
+    def __init__(self, potential_energy_calculator=None, atom_subset=None, context_cache=None, accept_anyway=False, rng_seed=42):
         self.n_accepted = 0
         self.n_proposed = 0
         self.accept_anyway = accept_anyway
@@ -83,7 +84,7 @@ class DeterministicMetropolizedMove(MCMCMove):
         self.context_cache = context_cache
         self.state_history = []
         # use "deterministic" random generator
-        self.rng = default_rng(42)
+        self.rng = default_rng(rng_seed)
 
     @property
     def statistics(self):
@@ -131,9 +132,16 @@ class DeterministicMetropolizedMove(MCMCMove):
         # Handle default and weird cases for atom_subset.
         if self.atom_subset is None:
             atom_subset = slice(None)
-        elif not isinstance(self.atom_subset, slice) and len(self.atom_subset) == 1:
+        elif isinstance(self.atom_subset, int): # we've been given a number of atoms to move randomly
+            if(self.atom_subset < 2):  
+                #the second case, wanting too many atoms, will cause random.choice to raise an error anyway
+                raise ValueError("We tried to pick too few random atoms.")
+            atom_subset = self.rng.choice(sampler_state.n_particles, self.atom_subset, replace = False)
+            #choses self.atom_subset numbers from the range 0 to n_particles, without replacements
+        #I am not sure we need to care about edge cases like this, commented out right now because it caused issues
+        #elif not isinstance(self.atom_subset, slice) and len(self.atom_subset) == 1:
             # Slice so that initial_positions (below) will have a 2D shape.
-            atom_subset = slice(self.atom_subset[0], self.atom_subset[0]+1)
+        #    atom_subset = slice(self.atom_subset[0], self.atom_subset[0]+1)
         else:
             atom_subset = self.atom_subset
 
@@ -143,6 +151,11 @@ class DeterministicMetropolizedMove(MCMCMove):
             # Numpy array when sliced return a view, they are not copied.
             initial_positions = copy.deepcopy(
                 sampler_state.positions[atom_subset])
+        elif isinstance(self.atom_subset, int):
+            initial_positions = sampler_state.positions[atom_subset] #TODO Figure out if this makes a copy or not? 
+            #Probably not because the list can be very irregular
+            #atom_subset is a list here, might need better naming. Just letting the default else handle it is an option
+            #but might be harder to read/understand?
         else:
             # This automatically creates a copy.
             initial_positions = sampler_state.positions[atom_subset]
