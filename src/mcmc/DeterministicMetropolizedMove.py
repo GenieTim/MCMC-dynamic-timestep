@@ -151,13 +151,9 @@ class DeterministicMetropolizedMove(MCMCMove):
             # Numpy array when sliced return a view, they are not copied.
             initial_positions = copy.deepcopy(
                 sampler_state.positions[atom_subset])
-        elif isinstance(self.atom_subset, int):
-            initial_positions = sampler_state.positions[atom_subset] #TODO Figure out if this makes a copy or not? 
-            #Probably not because the list can be very irregular
-            #atom_subset is a list here, might need better naming. Just letting the default else handle it is an option
-            #but might be harder to read/understand?
         else:
             # This automatically creates a copy.
+            # If random particles were picked, then atom_subset is a list of integers. 
             initial_positions = sampler_state.positions[atom_subset]
 
         # Propose perturbed positions. Modifying the reference changes the sampler state.
