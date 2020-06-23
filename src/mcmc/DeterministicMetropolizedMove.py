@@ -133,9 +133,6 @@ class DeterministicMetropolizedMove(MCMCMove):
         if self.atom_subset is None:
             atom_subset = slice(None)
         elif isinstance(self.atom_subset, int): # we've been given a number of atoms to move randomly
-            if(self.atom_subset < 2):  
-                #the second case, wanting too many atoms, will cause random.choice to raise an error anyway
-                raise ValueError("We tried to pick too few random atoms.")
             atom_subset = self.rng.choice(sampler_state.n_particles, self.atom_subset, replace = False)
             #choses self.atom_subset numbers from the range 0 to n_particles, without replacements
         #I am not sure we need to care about edge cases like this, commented out right now because it caused issues
