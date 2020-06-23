@@ -25,10 +25,15 @@ sampler_state = SamplerState(positions=alanine.positions)
 # run sampler multiple times with different parameters
 # in order to check for differences due to different timesteps
 # (runtime can only be compared for same acceptance rate)
+f = open("../out/test_results.txt", mode='w+')
 accept_state = [True, False]
 for accept in accept_state:
-    print("Accepting anyway: {}".format(accept))
-    print("Timestepsize\tAccepted\tProposed\tTime [s]")
+    text = "Accepting anyway: {}".format(accept)
+    print(text)
+    print(text, file = f)
+    text = "Timestepsize\tAccepted\tProposed\tTime [s]"
+    print(text)
+    print(text, file = f)
     # run different nr. of timesteps to go before recalculation
     for n_steps in range(1, 10):
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(
@@ -44,8 +49,11 @@ for accept in accept_state:
         sampler.run(n_iterations=400)
         end = time.time()
 
-        print("{}\t{}\t{}\t{}".format(n_steps, move.n_accepted,
-                                      move.n_proposed, end - start))
+        text = "{}\t{}\t{}\t{}".format(n_steps, move.n_accepted,
+                                      move.n_proposed, end - start)
+
+        print(text)
+        print(text, file = f)
 
         # write the results
         # only interesting if they are not all the same
