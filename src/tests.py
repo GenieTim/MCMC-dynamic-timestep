@@ -64,11 +64,13 @@ for accept in accept_state:
 
 # test with different number of atoms to move
 # and different displacement sigma
+# Since large atom numbers seem to always lead to rejection of the move
+# I figured I would try with different sigmas, but sigma doesn't seem to be contributing at all to acceptance/rejection
 
 print("Testing different atom numbers to move and sigma factor, accepting anyways: False")
 print("Atmom Number\tSigma [nm]\tAccepted\tProposed\tTime [s]")
 
-for a_number in range(1, 10):
+for a_number in range(1, 5):
     for sigma_factor in range(1, 11):
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=1)
         move = DeterministicRotateDisplaceMove(
