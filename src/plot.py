@@ -69,7 +69,7 @@ def torsional_angle(name, positions):
 # read data
 os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/../")
 # TODO: replace with your experiment
-data = json.load(open("./out/results_TorsionNeglectingMove.json"))
+data = json.load(open("./out/results_DeterministicRotateDisplaceMove.json"))
 
 # check whether we know which positions correspond to which atom
 # test_pos = np.array(data[0]['positions']['value'])

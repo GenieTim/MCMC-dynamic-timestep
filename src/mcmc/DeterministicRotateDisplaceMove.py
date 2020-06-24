@@ -15,9 +15,10 @@ class DeterministicRotateDisplaceMove(DeterministicMetropolizedMove):
     displacement_sigma : simtk.unit.Quantity
         The standard deviation of the normal distribution used to propose the
         random displacement (units of length, default is 1.0*nanometer).
-    atom_subset : slice or list of int, optional
-        If specified, the move is applied only to those atoms specified by these
-        indices. If None, the move is applied to all atoms (default is None).
+    atom_subset : slice or int, optional
+        If specified, the move is applied only to those atoms specified by the
+        slice. If int is specified, that many atoms are chosen at random
+        If None, the move is applied to all atoms (default is None).
     context_cache : openmmtools.cache.ContextCache, optional
         The ContextCache to use for Context creation. If None, the global cache
         openmmtools.cache.global_context_cache is used (default is None).

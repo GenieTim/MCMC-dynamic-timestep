@@ -39,7 +39,7 @@ for accept in accept_state:
         V_calculator = TorsionNeglectingPotentialEnergyCalculator(
             timesteps=n_steps)
         move = DeterministicRotateDisplaceMove(
-            displacement_sigma=5.0*unit.nanometer, atom_subset = 3, potential_energy_calculator=V_calculator, accept_anyway=accept, rng_seed = 42)
+            displacement_sigma=5.0*unit.nanometer, atom_subset = 1, potential_energy_calculator=V_calculator, accept_anyway=accept, rng_seed = 42)
         sampler = MCMCSampler(copy.deepcopy(thermodynamic_state),
                               copy.deepcopy(sampler_state), move=move)
         sampler.minimize()
@@ -61,3 +61,42 @@ for accept in accept_state:
             out_filename = os.path.dirname(os.path.realpath(
                 __file__)) + "/../out/test_results_" + str(n_steps) + ".json"
             move.write_to_file(out_filename=out_filename)
+
+# test with different number of atoms to move
+# and different displacement sigma
+
+print("Testing different atom numbers to move, accepting anyways: False")
+print("Atmom Number\tAccepted\tProposed\tTime [s]")
+
+for a_number in range(1, 10):
+    V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=1)
+    move = DeterministicRotateDisplaceMove(
+        displacement_sigma=5.0*unit.nanometer, atom_subset = a_number, potential_energy_calculator=V_calculator, accept_anyway=False, rng_seed = 42)
+    sampler = MCMCSampler(copy.deepcopy(thermodynamic_state), copy.deepcopy(sampler_state), move=move)
+    sampler.minimize()
+    # take time
+    start = time.time()
+    sampler.run(n_iterations=400)
+    end = time.time()
+
+    text = "{}\t{}\t{}\t{}".format(a_number, move.n_accepted,
+                                      move.n_proposed, end - start)
+    print(text)
+
+print("Testing different displacement distance to move, accepting anyways: False. 1 Atom")
+print("Sigma [nm]\tAccepted\tProposed\tTime [s]")
+
+for sigma_factor in range(1, 11):
+    V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=1)
+    move = DeterministicRotateDisplaceMove(
+        displacement_sigma=0.5*unit.nanometer*sigma_factor, atom_subset = 1, potential_energy_calculator=V_calculator, accept_anyway=False, rng_seed = 42)
+    sampler = MCMCSampler(copy.deepcopy(thermodynamic_state), copy.deepcopy(sampler_state), move=move)
+    sampler.minimize()
+    # take time
+    start = time.time()
+    sampler.run(n_iterations=400)
+    end = time.time()
+
+    text = "{}\t{}\t{}\t{}".format(sigma_factor * 0.5, move.n_accepted,
+                                      move.n_proposed, end - start)
+    print(text)
