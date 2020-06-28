@@ -1,5 +1,7 @@
+import glob
 import json
 import os
+import re
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -69,7 +71,8 @@ def torsional_angle(name, positions):
 # read data
 os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/../")
 # TODO: replace with your experiment
-data = json.load(open("./out/results_TorsionNeglectingMove.json"))
+# "./out/results_TorsionNeglectingMove.json"))
+data = json.load(open("./out/test_results_False_1.json"))
 
 # check whether we know which positions correspond to which atom
 # test_pos = np.array(data[0]['positions']['value'])
@@ -120,6 +123,53 @@ ax.yaxis.set_ticks(np.linspace(min(psi), max(psi), num=5))
 ax.xaxis.set_ticks(np.linspace(min(phi), max(phi), num=5))
 
 fig.savefig("./img/psi_vs_phi.png", bbox_inches='tight')
-plt.show()
+# plt.show()
 
-# TODO: also plot deviations between current energy
+# plot runtime gain
+perf_test_res = pd.read_csv('./out/test_results_perf_True.tsv', sep="\t")
+
+fig, ax = plt.subplots()
+ax.plot(perf_test_res['Timestepsize'], perf_test_res['Time [s]'])
+ax.set_title("Runtime of the MC simulation, accepting all steps")
+ax.set_xlabel("Nr. of timesteps before updating torsion cache")
+ax.set_ylabel("Runtime [s]")
+ax.set_ylim(0, 1.05 * max(perf_test_res['Time [s]']))
+fig.savefig("./img/runtime.png", bbox_inches='tight')
+
+# plot deviations between current energy
+acceptrate_test_res = pd.read_csv(
+    './out/test_results_perf_False.tsv', sep="\t")
+
+fig, ax = plt.subplots()
+ax.plot(acceptrate_test_res['Timestepsize'],
+        acceptrate_test_res['Accepted'] / acceptrate_test_res['Proposed'])
+ax.set_title("Acceptance rate of the MC simulation")
+ax.set_xlabel("Nr. of timesteps before updating torsion cache")
+ax.set_ylabel("Acceptance rate")
+ax.set_ylim(0, 1)
+fig.savefig("./img/acceptrate.png", bbox_inches='tight')
+
+# TODO: plot deviations between current energy
+mc_res_files = sorted(glob.glob("./out/test_results_False_*.json"))
+timesteps = []
+max_energy_deviations = []
+
+for f in mc_res_files:
+    timestep_re = re.search('([0-9]*)\.json', f)
+    timestep = timestep_re.group(1)
+    timesteps.append(timestep)
+    data = pd.read_json(f)
+    
+    energy_deviations_this_time = data['proposed_energy'] - data['unmodified_energy']
+    max_energy_deviations.append(max(max(energy_deviations_this_time), abs(min(energy_deviations_this_time))))
+    # TODO: may want to plot these per timestep here
+    # instead of just the average afterwards
+
+fig, ax = plt.subplots()
+ax.plot(timesteps,
+        max_energy_deviations)
+ax.set_title("Energy deviation from correct value while iterating")
+ax.set_xlabel("Nr. of timesteps before updating torsion cache")
+ax.set_ylabel("Maximum absolute energy deviation [kJ/mol]")
+fig.savefig("./img/energy_deviations.png", bbox_inches='tight')
+

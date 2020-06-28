@@ -8,7 +8,7 @@ import json
 import os
 
 import numpy as np
-from numpy.random import default_rng, choice
+from numpy.random import choice, default_rng
 
 from openmmtools import cache, integrators, utils
 from openmmtools.mcmc import MCMCMove
@@ -126,19 +126,23 @@ class DeterministicMetropolizedMove(MCMCMove):
 
         # Compute initial energy. We don't need to set velocities to compute the potential.
         sampler_state.apply_to_context(context, ignore_velocities=True)
+        # TODO: decide whether to use for initial state the custom pot. E calculator too
+        # initial_energy = thermodynamic_state.reduced_potential(context)
         initial_energy = self._calculate_potential_energy(
             thermodynamic_state, context)
 
         # Handle default and weird cases for atom_subset.
         if self.atom_subset is None:
             atom_subset = slice(None)
-        elif isinstance(self.atom_subset, int): # we've been given a number of atoms to move randomly
-            atom_subset = self.rng.choice(sampler_state.n_particles, self.atom_subset, replace = False)
-            #choses self.atom_subset numbers from the range 0 to n_particles, without replacements
-        #I am not sure we need to care about edge cases like this, commented out right now because it caused issues
-        #elif not isinstance(self.atom_subset, slice) and len(self.atom_subset) == 1:
+        # we've been given a number of atoms to move randomly
+        elif isinstance(self.atom_subset, int):
+            atom_subset = self.rng.choice(
+                sampler_state.n_particles, self.atom_subset, replace=False)
+            # choses self.atom_subset numbers from the range 0 to n_particles, without replacements
+        # I am not sure we need to care about edge cases like this, commented out right now because it caused issues
+        elif not isinstance(self.atom_subset, slice) and len(self.atom_subset) == 1:
             # Slice so that initial_positions (below) will have a 2D shape.
-        #    atom_subset = slice(self.atom_subset[0], self.atom_subset[0]+1)
+            atom_subset = slice(self.atom_subset[0], self.atom_subset[0]+1)
         else:
             atom_subset = self.atom_subset
 
@@ -150,7 +154,7 @@ class DeterministicMetropolizedMove(MCMCMove):
                 sampler_state.positions[atom_subset])
         else:
             # This automatically creates a copy.
-            # If random particles were picked, then atom_subset is a list of integers. 
+            # If random particles were picked, then atom_subset is a list of integers.
             initial_positions = sampler_state.positions[atom_subset]
 
         # Propose perturbed positions. Modifying the reference changes the sampler state.

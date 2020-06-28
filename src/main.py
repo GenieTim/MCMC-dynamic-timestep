@@ -41,7 +41,8 @@ V_calculator = TorsionNeglectingPotentialEnergyCalculator(timesteps=5)
 move = DeterministicRotateDisplaceMove(
     displacement_sigma=5.0*unit.nanometer,
     potential_energy_calculator=V_calculator,
-    atom_subset=list(range(sampler_state.n_particles)) # TODO: currently, all atoms get moved the same distance I guess. That may not make much sense
+    atom_subset=5,
+    rng_seed=42
 )
 sampler = MCMCSampler(thermodynamic_state, sampler_state, move=move)
 

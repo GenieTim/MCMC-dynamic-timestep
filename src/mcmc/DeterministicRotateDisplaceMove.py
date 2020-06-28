@@ -176,5 +176,6 @@ class DeterministicRotateDisplaceMove(DeterministicMetropolizedMove):
         # print("Proposing for {} positions".format(len(initial_positions)))
         displaced_positions = self.displace_positions(
             initial_positions, self.displacement_sigma)
-        rotated_positions = self.rotate_positions(initial_positions)
-        return rotated_positions
+        return displaced_positions
+        # rotated_positions = self.rotate_positions(initial_positions)
+        # return rotated_positions
